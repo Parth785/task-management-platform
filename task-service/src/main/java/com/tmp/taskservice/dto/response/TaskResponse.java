@@ -14,6 +14,7 @@ public record TaskResponse(
         TaskStatus status,
         TaskPriority priority,
         UUID assigneeUserId,
+        LocalDateTime dueDate,
         LocalDateTime createdAt,
         LocalDateTime updatedAt
 ) {}

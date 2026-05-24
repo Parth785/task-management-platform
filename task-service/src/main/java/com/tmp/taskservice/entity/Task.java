@@ -46,6 +46,9 @@ public class Task {
 
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+    
+    @Column(name = "due_date")
+    private LocalDateTime dueDate;
 
     @PrePersist
     protected void onCreate() {

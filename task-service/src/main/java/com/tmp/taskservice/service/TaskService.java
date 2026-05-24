@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.beans.factory.annotation.Value;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -38,6 +39,7 @@ public class TaskService {
                 .description(request.getDescription())
                 .priority(request.getPriority())
                 .assigneeUserId(request.getAssigneeUserId())
+                .dueDate(request.getDueDate())
                 .build();
 
         return mapToResponse(taskRepository.save(task));
@@ -66,6 +68,9 @@ public class TaskService {
         task.setDescription(request.getDescription());
         if (request.getPriority() != null) {
             task.setPriority(request.getPriority());
+        }
+        if (request.getDueDate() != null) {
+            task.setDueDate(request.getDueDate());
         }
         return mapToResponse(taskRepository.save(task));
     }
@@ -120,6 +125,13 @@ public class TaskService {
         }
     }
 
+    public List<TaskResponse> getOverdueTasks() {
+        return taskRepository.findOverdueTasks(LocalDateTime.now(), TaskStatus.DONE)
+                .stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+    
     private Task findTaskByIdAndProjectId(UUID taskId, UUID projectId) {
         return taskRepository.findByIdAndProjectId(taskId, projectId)
                 .orElseThrow(() -> new RuntimeException(
@@ -135,6 +147,7 @@ public class TaskService {
                 task.getStatus(),
                 task.getPriority(),
                 task.getAssigneeUserId(),
+                task.getDueDate(),
                 task.getCreatedAt(),
                 task.getUpdatedAt()
         );

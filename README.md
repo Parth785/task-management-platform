@@ -107,6 +107,7 @@ tokens locally without calling auth-service.
 | DB_PASSWORD | Database password | postgres |
 | JWT_SECRET | HS256 signing secret (min 32 chars) | dev-secret-key-change-in-production-minimum-256-bits |
 | JWT_EXPIRY_MS | Token expiry in milliseconds | 86400000 (24 hours) |
+| JWT_REFRESH_EXPIRY_MS | Refresh token expiry in ms | 604800000 (7 days) |
 | AUTH_SERVICE_URL | Auth service base URL (task-service only) | http://localhost:8081 |
 
 ---
@@ -122,6 +123,8 @@ tokens locally without calling auth-service.
 | GET | /api/v1/users/me | Any role | Get own profile |
 | GET | /api/v1/users/{id} | Any role | Get user by ID |
 | GET | /api/v1/users | ADMIN only | List all users |
+| POST | /api/v1/auth/refresh | Public | Get new access token using refresh token |
+
 
 ### Task Service — port 8082
 
@@ -140,6 +143,8 @@ tokens locally without calling auth-service.
 | PATCH | /api/v1/projects/{pid}/tasks/{tid}/assign | ADMIN | Assign task to user |
 | DELETE | /api/v1/projects/{pid}/tasks/{tid} | ADMIN | Delete task |
 | GET | /api/v1/tasks/my-tasks | Any role | Get my assigned tasks |
+| GET | /api/v1/tasks/overdue | Any role | Get all overdue tasks |
+
 
 ---
 

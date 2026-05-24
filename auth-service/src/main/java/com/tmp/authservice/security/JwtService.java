@@ -16,6 +16,9 @@ public class JwtService {
 
     @Value("${jwt.secret}")
     private String secret;
+    
+    @Value("${jwt.refresh.expiration.ms:604800000}")
+    private long refreshExpirationMs;
 
     @Value("${jwt.expiration.ms}")
     private long expirationMs;
@@ -57,5 +60,13 @@ public class JwtService {
         } catch (Exception e) {
             return false;
         }
+    }
+    
+    public String generateRefreshToken() {
+        return java.util.UUID.randomUUID().toString();
+    }
+
+    public long getRefreshExpirationMs() {
+        return refreshExpirationMs;
     }
 }

@@ -85,4 +85,8 @@ public class TaskController {
         UUID userId = UUID.fromString((String) authentication.getPrincipal());
         return ResponseEntity.ok(taskService.getMyTasks(userId));
     }
+    @GetMapping("/api/v1/tasks/overdue")
+    public ResponseEntity<List<TaskResponse>> getOverdueTasks() {
+        return ResponseEntity.ok(taskService.getOverdueTasks());
+    }
 }

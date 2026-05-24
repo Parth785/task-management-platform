@@ -4,6 +4,7 @@ import com.tmp.authservice.dto.request.LoginRequest;
 import com.tmp.authservice.dto.request.RegisterRequest;
 import com.tmp.authservice.dto.response.AuthResponse;
 import com.tmp.authservice.dto.response.UserResponse;
+import com.tmp.authservice.entity.RefreshToken;
 import com.tmp.authservice.entity.User;
 import com.tmp.authservice.enums.Role;
 import com.tmp.authservice.repository.UserRepository;
@@ -25,6 +26,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final RefreshTokenService refreshTokenService;
 
     public UserResponse register(RegisterRequest request, Authentication authentication) {
         if (userRepository.existsByEmail(request.getEmail())) {
@@ -66,9 +68,15 @@ public class UserService {
             throw new IllegalArgumentException("Invalid email or password");
         }
 
-        String token = jwtService.generateToken(user.getId(), user.getRole().name());
+        String accessToken = jwtService.generateToken(user.getId(), user.getRole().name());
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        return new AuthResponse(token, "Bearer", user.getRole().name());
+        return new AuthResponse(
+                accessToken,
+                refreshToken.getToken(),
+                "Bearer",
+                user.getRole().name()
+        );
     }
 
     public UserResponse getUserById(UUID id) {
