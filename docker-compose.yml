@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tmp-postgres
+    environment:
+      POSTGRES_DB: task_platform
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - tmp-network
+
+  auth-service:
+    build:
+      context: ./auth-service
+      dockerfile: Dockerfile
+    container_name: tmp-auth-service
+    ports:
+      - "8081:8081"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: task_platform
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: docker-secret-key-change-in-production-minimum-256-bits
+      JWT_EXPIRY_MS: 86400000
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tmp-network
+
+  task-service:
+    build:
+      context: ./task-service
+      dockerfile: Dockerfile
+    container_name: tmp-task-service
+    ports:
+      - "8082:8082"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: task_platform
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      JWT_SECRET: docker-secret-key-change-in-production-minimum-256-bits
+      AUTH_SERVICE_URL: http://auth-service:8081
+    depends_on:
+      postgres:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+    networks:
+      - tmp-network
+
+volumes:
+  postgres_data:
+
+networks:
+  tmp-network:
+    driver: bridge
