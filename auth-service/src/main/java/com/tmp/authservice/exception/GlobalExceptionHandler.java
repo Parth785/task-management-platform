@@ -48,6 +48,21 @@ public class GlobalExceptionHandler {
 	    );
 	}
 
+	@ExceptionHandler(UnauthorizedException.class)
+	public ResponseEntity<ErrorResponse> handleUnauthorizedException(
+	        UnauthorizedException ex,
+	        HttpServletRequest request) {
+
+	    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
+	            new ErrorResponse(
+	                    LocalDateTime.now(),
+	                    401,
+	                    ex.getMessage(),
+	                    request.getRequestURI()
+	            )
+	    );
+	}
+	
 	@ExceptionHandler(RuntimeException.class)
 	public ResponseEntity<ErrorResponse> handleRuntimeException(
 	        RuntimeException ex, HttpServletRequest request) {
@@ -65,4 +80,5 @@ public class GlobalExceptionHandler {
 	            new ErrorResponse(LocalDateTime.now(), 500, "An unexpected error occurred", request.getRequestURI())
 	    );
 	}
+	
 }

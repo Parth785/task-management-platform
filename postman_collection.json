@@ -1,7 +1,8 @@
 {
   "info": {
-    "_postman_id": "09d4fb2d-e3da-40fc-8761-7abd6764182d",
+    "_postman_id": "aa13fb22-b592-411d-9110-7f26898f26f1",
     "name": "Task Management Platform",
+    "description": "StartFragment\n\n# Task Management Platform API Collection\n\nThis Postman collection contains APIs for a microservices-based task management platform built with Spring Boot.\n\n## Services\n\n- Auth Service → localhost:8081\n    \n- Task Service → localhost:8082\n    \n\n## Features\n\n- JWT Authentication (HS256)\n    \n- Role-Based Access Control (RBAC)\n    \n- Secure inter-service communication\n    \n- Project and task management\n    \n- Task assignment\n    \n- Workflow/status transition validation\n    \n\n## Roles\n\n### ADMIN\n\n- Manage users\n    \n- Create/update/delete projects\n    \n- Create/update/delete tasks\n    \n- Assign tasks\n    \n\n### USER\n\n- View projects/tasks\n    \n- Access own profile\n    \n- View assigned tasks\n    \n\n## Notes\n\n- Login requests automatically store JWT tokens into collection variables.\n    \n- Project/task IDs are automatically stored after creation requests.\n    \n- APIs are grouped by domain for easier testing.\n    \n\nEndFragment",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
     "_exporter_id": "30468120"
   },
@@ -42,14 +43,15 @@
           "response": []
         },
         {
-          "name": "Login",
+          "name": "Admin Login",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "const json = pm.response.json();\r",
-                  "pm.collectionVariables.set(\"token\", json.token);"
+                  "pm.collectionVariables.set(\"admin_token\", json.accessToken);\r",
+                  "pm.collectionVariables.set(\"refresh_token\", json.refreshToken);"
                 ],
                 "type": "text/javascript",
                 "packages": {},
@@ -65,7 +67,7 @@
             "header": [],
             "body": {
               "mode": "raw",
-              "raw": "{\r\n    \"email\": \"admin@test.com\",\r\n    \"password\": \"password123\"\r\n}",
+              "raw": "{\r\n    \"email\": \"user@example.com\",\r\n    \"password\": \"password123\"\r\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -86,6 +88,104 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "User Login",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"user_token\", json.accessToken);\r",
+                  "pm.collectionVariables.set(\"refresh_token\", json.refreshToken);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"email\": \"hacker@test.com\",\r\n  \"password\": \"password123\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_auth}}/api/v1/auth/login",
+              "host": [
+                "{{base_auth}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "login"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "\r",
+                  "pm.collectionVariables.set(\"admin_token\", json.accessToken);\r",
+                  "\r",
+                  "if (json.refreshToken) {\r",
+                  "    pm.collectionVariables.set(\"refresh_token\", json.refreshToken);\r",
+                  "}"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "noauth"
+            },
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\r\n  \"refreshToken\": \"{{refresh_token}}\"\r\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{base_auth}}/api/v1/auth/refresh",
+              "host": [
+                "{{base_auth}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "auth",
+                "refresh"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     },
@@ -95,6 +195,16 @@
         {
           "name": "Get My Profile",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -114,7 +224,31 @@
         },
         {
           "name": "Get User By ID",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const json = pm.response.json();\r",
+                  "pm.collectionVariables.set(\"user_id\", json.id);"
+                ],
+                "type": "text/javascript",
+                "packages": {},
+                "requests": {}
+              }
+            }
+          ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -133,8 +267,18 @@
           "response": []
         },
         {
-          "name": "Get All Users",
+          "name": "[ADMIN] Get All Users",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -157,7 +301,7 @@
       "name": "Projects",
       "item": [
         {
-          "name": "Create Project",
+          "name": "[ADMIN] Create Project",
           "event": [
             {
               "listen": "test",
@@ -173,6 +317,16 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -201,6 +355,16 @@
         {
           "name": "Get All Projects",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -220,6 +384,16 @@
         {
           "name": "Get Project By ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -238,8 +412,48 @@
           "response": []
         },
         {
-          "name": "Update Project",
+          "name": "[ADMIN] Delete Project",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_task}}/api/v1/projects/{{project_id}}",
+              "host": [
+                "{{base_task}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                "{{project_id}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "[ADMIN] Update Project",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [],
             "body": {
@@ -265,26 +479,6 @@
             }
           },
           "response": []
-        },
-        {
-          "name": "Delete Project",
-          "request": {
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_task}}/api/v1/projects/{{project_id}}",
-              "host": [
-                "{{base_task}}"
-              ],
-              "path": [
-                "api",
-                "v1",
-                "projects",
-                "{{project_id}}"
-              ]
-            }
-          },
-          "response": []
         }
       ]
     },
@@ -292,7 +486,7 @@
       "name": "Tasks",
       "item": [
         {
-          "name": "Create Task",
+          "name": "[ADMIN] Create Task",
           "event": [
             {
               "listen": "test",
@@ -308,6 +502,16 @@
             }
           ],
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
             "body": {
@@ -338,6 +542,16 @@
         {
           "name": "Get All Tasks",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -359,6 +573,16 @@
         {
           "name": "Get Task By ID",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -379,8 +603,18 @@
           "response": []
         },
         {
-          "name": "Update Task",
+          "name": "[ADMIN] Update Task",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PUT",
             "header": [],
             "body": {
@@ -410,8 +644,18 @@
           "response": []
         },
         {
-          "name": "Update Task Status",
+          "name": "[ADMIN] Update Task Status",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PATCH",
             "header": [],
             "body": {
@@ -442,8 +686,18 @@
           "response": []
         },
         {
-          "name": "Assign Task",
+          "name": "[ADMIN] Assign Task",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "PATCH",
             "header": [],
             "body": {
@@ -474,8 +728,18 @@
           "response": []
         },
         {
-          "name": "Delete Task",
+          "name": "[ADMIN] Delete Task",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{admin_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "DELETE",
             "header": [],
             "url": {
@@ -498,6 +762,16 @@
         {
           "name": "Get My Tasks",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
             "url": {
@@ -514,20 +788,40 @@
             }
           },
           "response": []
+        },
+        {
+          "name": "Get Overdue Tasks",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{user_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_task}}/api/v1/tasks/overdue",
+              "host": [
+                "{{base_task}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "tasks",
+                "overdue"
+              ]
+            }
+          },
+          "response": []
         }
       ]
     }
   ],
-  "auth": {
-    "type": "bearer",
-    "bearer": [
-      {
-        "key": "token",
-        "value": "{{token}}",
-        "type": "string"
-      }
-    ]
-  },
   "event": [
     {
       "listen": "prerequest",
@@ -555,18 +849,18 @@
   "variable": [
     {
       "key": "base_auth",
-      "value": ""
+      "value": "http://localhost:8081"
     },
     {
       "key": "base_task",
-      "value": ""
-    },
-    {
-      "key": "token",
-      "value": ""
+      "value": "http://localhost:8082"
     },
     {
       "key": "admin_token",
+      "value": ""
+    },
+    {
+      "key": "user_token",
       "value": ""
     },
     {
@@ -579,6 +873,10 @@
     },
     {
       "key": "user_id",
+      "value": ""
+    },
+    {
+      "key": "refresh_token",
       "value": ""
     }
   ]

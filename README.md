@@ -105,6 +105,18 @@ mvn clean package
 
 ---
 
+## Admin Bootstrap Strategy
+
+Public registration only allows USER role creation.
+
+To initialize the first administrator account, manually update the role in PostgreSQL:
+
+UPDATE authdb.users
+SET role = 'ADMIN'
+WHERE email = 'admin@example.com';
+
+After bootstrap, ADMIN users can manage additional privileged users.
+
 ## Environment Variables
 
 Both services share the same JWT secret. This is how task-service validates

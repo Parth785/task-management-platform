@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.beans.factory.annotation.Value;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,6 +30,7 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final ProjectService projectService;
+    private final HttpServletRequest httpServletRequest;
 
     @Value("${auth.service.url:http://localhost:8081}")
     private String authServiceUrl;
@@ -114,12 +119,24 @@ public class TaskService {
     private void validateUserExists(UUID userId) {
         try {
             RestTemplate restTemplate = new RestTemplate();
-            restTemplate.getForObject(
+
+            String authHeader = httpServletRequest.getHeader("Authorization");
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Authorization", authHeader);
+
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+            restTemplate.exchange(
                     authServiceUrl + "/api/v1/users/" + userId,
+                    HttpMethod.GET,
+                    entity,
                     Object.class
             );
+
         } catch (HttpClientErrorException.NotFound e) {
             throw new RuntimeException("Assignee user not found with id: " + userId);
+
         } catch (Exception e) {
             throw new RuntimeException("Could not validate assignee user: " + e.getMessage());
         }

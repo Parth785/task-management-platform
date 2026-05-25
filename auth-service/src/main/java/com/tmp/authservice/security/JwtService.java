@@ -27,13 +27,22 @@ public class JwtService {
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generateToken(UUID userId, String role) {
+    /*public String generateToken(UUID userId, String role) {
         return Jwts.builder()
                 .subject(userId.toString())
                 .claim("role", role)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
                 .signWith(getSigningKey())
+                .compact();
+    }*/
+    public String generateToken(UUID userId, String role) {
+        return Jwts.builder()
+                .subject(userId.toString())
+                .claim("role", role)
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + expirationMs))
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 

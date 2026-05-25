@@ -7,6 +7,7 @@ import com.tmp.authservice.dto.response.UserResponse;
 import com.tmp.authservice.entity.RefreshToken;
 import com.tmp.authservice.entity.User;
 import com.tmp.authservice.enums.Role;
+import com.tmp.authservice.exception.UnauthorizedException;
 import com.tmp.authservice.repository.UserRepository;
 import com.tmp.authservice.security.JwtService;
 import lombok.RequiredArgsConstructor;
@@ -58,14 +59,14 @@ public class UserService {
 
     public AuthResponse login(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new IllegalArgumentException("Invalid email or password"));
+        		.orElseThrow(() -> new UnauthorizedException("Invalid email or password"));
 
         if (!user.getIsActive()) {
-            throw new IllegalArgumentException("Account is deactivated");
+        	throw new UnauthorizedException("Account is deactivated");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
-            throw new IllegalArgumentException("Invalid email or password");
+        	throw new UnauthorizedException("Invalid email or password");
         }
 
         String accessToken = jwtService.generateToken(user.getId(), user.getRole().name());
